@@ -28,7 +28,7 @@ jobs:
 
     - name: Configure CMake
       run: |
-        cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+        cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake ${{ matrix.os != 'windows-latest' && '-DCMAKE_BUILD_TYPE=Release' || '' }}
       shell: bash
 
     - name: Build
