@@ -1,0 +1,56 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Conan
+      run: |
+        pip install conan
+      shell: bash
+
+    - name: Configure Conan
+      run: |
+        conan profile detect --force
+        conan install . --output-folder=build --build=missing
+      shell: bash
+
+    - name: Configure CMake
+      run: |
+        cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
+      shell: bash
+
+    - name: Build
+      run: |
+        cmake --build build
+      shell: bash
+
+    - name: Run Executable (Linux/macOS)
+      if: matrix.os != 'windows-latest'
+      run: ./build/main
+      shell: bash
+
+    - name: Run Executable (Windows)
+      if: matrix.os == 'windows-latest'
+      run: .\build\main.exe
+      shell: cmd
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: main-${{ matrix.os }}
+        path: |
+          build/main
+          build/main.exe
+        if-no-files-found: ignore
